@@ -1,0 +1,2 @@
+# AeroCage-X | Whitelisted Assets Configuration File
+# Write MAC Addresses line by line (Example: AA:BB:CC:DD:EE:FF)

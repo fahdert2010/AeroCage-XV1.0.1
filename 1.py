@@ -1,89 +1,57 @@
-#!/usr/bin/env python3
-"""
-File Name: system_guard.py
-Version: 1.1.0
-Description: System Guard for AeroCage-X.
-             Ensures proper privileges and runtime safety checks.
-"""
+test_error_messenger.py
+import pytest
+from utils.error_messenger import ErrorMessenger
 
-import os
-import sys
-from core.logger_manager import LoggerManager
+def test_error_messenger_methods_exist():
+    assert hasattr(ErrorMessenger, "show_error")
+    assert hasattr(ErrorMessenger, "show_warning")
+    assert hasattr(ErrorMessenger, "show_info")
 
-class SystemGuard:
-    """حارس النظام - مسؤول عن التحقق من الصلاحيات والأمان"""
+test_theme_plugin.py
+import pytest
+import tkinter as tk
+from modules.theme_plugin import ThemePlugin
 
-    @staticmethod
-    def enforce_root_privileges() -> None:
-        """يتأكد من أن البرنامج يعمل بصلاحيات الجذر"""
-        if os.name != "nt":  # تحقق فقط في الأنظمة الشبيهة بـ Unix
-            if os.geteuid() != 0:
-                LoggerManager.log_error("❌ يجب تشغيل البرنامج بصلاحيات الجذر (sudo).")
-                sys.exit("❌ يجب تشغيل البرنامج بصلاحيات الجذر (sudo).")
+def test_theme_plugin_colors_fonts():
+    root = tk.Tk()
+    theme = ThemePlugin(root)
+    assert theme.get_color("background") == "#1e1e1e"
+    assert isinstance(theme.get_font("small"), tuple)
+    root.destroy()
 
-    @staticmethod
-    def check_environment() -> None:
-        """يتأكد من أن البيئة مناسبة للتشغيل"""
-        logs_path = "/home/kali/AeroCage-XV4.0.0/logs"
-        if not os.path.exists(logs_path):
-            os.makedirs(logs_path)
-            LoggerManager.log_info("Logs directory created successfully")
-#!/usr/bin/env python3
-"""
-File Name: event_bus.py
-Version: 1.0.0
-Description: Event Bus for AeroCage-X.
-             Provides a publish-subscribe mechanism for modules to communicate.
-"""
+test_language_processor.py
+import pytest
+from utils.language_processor import LanguageProcessor
 
-from typing import Callable, Dict, List
+def test_translate_arabic_title():
+    lp = LanguageProcessor(default_lang="ar")
+    assert "الواجهة الموحدة" in lp.translate("title", raw=True)
 
-class EventBus:
-    """حافلة الأحداث - تربط الوحدات ببعضها عبر نظام publish/subscribe"""
+def test_translate_english_title():
+    lp = LanguageProcessor(default_lang="en")
+    assert "Unified Launcher" in lp.translate("title")
 
-    def __init__(self):
-        self._subscribers: Dict[str, List[Callable]] = {}
+def test_process_rtl_short_word():
+    lp = LanguageProcessor()
+    assert lp.process_rtl("عربي") == "عربي"
 
-    def subscribe(self, event_name: str, callback: Callable) -> None:
-        """تسجيل دالة للاستماع لحدث معين"""
-        if event_name not in self._subscribers:
-            self._subscribers[event_name] = []
-        self._subscribers[event_name].append(callback)
+┌──(kali㉿kali)-[~/AeroCage-XV4.0.0]
+└─$ pytest -v tests/
 
-    def unsubscribe(self, event_name: str, callback: Callable) -> None:
-        """إلغاء الاشتراك من حدث معين"""
-        if event_name in self._subscribers:
-            self._subscribers[event_name] = [
-                cb for cb in self._subscribers[event_name] if cb != callback
-            ]
+============================================= test session starts =============================================
+platform linux -- Python 3.13.12, pytest-9.0.2, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/kali/AeroCage-XV4.0.0
+plugins: anyio-4.12.1, typeguard-4.4.4
+collected 5 items                                                                                             
 
-    def publish(self, event_name: str, *args, **kwargs) -> None:
-        """نشر حدث لجميع المشتركين"""
-        if event_name in self._subscribers:
-            for callback in self._subscribers[event_name]:
-                callback(*args, **kwargs)
-#!/usr/bin/env python3
-"""
-File Name: logger_vault.py
-Version: 4.0.0
-Description: Logger Vault for AeroCage-X
-             Centralized logging configuration.
-"""
+tests/test_error_messenger.py::test_error_messenger_methods_exist PASSED                                [ 20%]
+tests/test_language_processor.py::test_translate_arabic_title PASSED                                    [ 40%]
+tests/test_language_processor.py::test_translate_english_title PASSED                                   [ 60%]
+tests/test_language_processor.py::test_process_rtl_short_word PASSED                                    [ 80%]
+tests/test_theme_plugin.py::test_theme_plugin_colors_fonts PASSED                                       [100%]
 
-import logging
-import os
+============================================== 5 passed in 0.17s ==============================================
+                                                                                                               
+┌──(kali㉿kali)-[~/AeroCage-XV4.0.0]
 
-def setup_logging(log_dir: str = "/home/kali/AeroCage-XV4.0.0/logs") -> None:
-    """تهيئة نظام التسجيل Logging"""
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, "aerocage.log")
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.FileHandler(log_file, encoding="utf-8"),
-            logging.StreamHandler()
-        ]
-    )
-    logging.info("LoggerVault: Logging system initialized.")
